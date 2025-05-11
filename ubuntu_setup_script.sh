@@ -141,7 +141,7 @@ fi
 # Step 3: Install flatpak if not already installed
 if [ "${selected[3]}" = true ]; then
     echo -e "${CYAN}Setting up flatpak...${NC}"
-    apt install flatpak gnome-software-plugin-flatpak -y
+    nala install flatpak gnome-software-plugin-flatpak -y
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     echo -e "${GREEN}Flatpak setup complete.${NC}"
 fi
@@ -160,7 +160,7 @@ fi
 # Step 5: Install Steam
 if [ "${selected[5]}" = true ]; then
     echo -e "${CYAN}Installing Steam...${NC}"
-    apt install steam -y
+    nala install steam -y
     echo -e "${GREEN}Steam installed.${NC}"
 fi
 
