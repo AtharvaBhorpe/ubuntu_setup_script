@@ -26,6 +26,7 @@ declare -A steps=(
   [7]="Install VS Code"
   [8]="Install Pixi package manager"
   [9]="Install OpenRazer and Polychromatic drivers"
+  [10]="Install Rust using rustup"
 )
 
 # Function to display the TUI selection menu
@@ -66,7 +67,7 @@ while true; do
   read -r choice
   
   case $choice in
-    [1-9])
+    [1-9]|10)
       if [ -n "${steps[$choice]}" ]; then
         if [ "${selected[$choice]}" = true ]; then
           selected[$choice]=false
@@ -232,6 +233,41 @@ if [ "${selected[9]}" = true ]; then
     
     echo -e "${GREEN}OpenRazer and Polychromatic drivers installed.${NC}"
     echo -e "${YELLOW}NOTE: You may need to reboot your system for the Razer drivers to work properly.${NC}"
+fi
+
+# Step 10: Install Rust using rustup
+if [ "${selected[10]}" = true ]; then
+    echo -e "${CYAN}Installing Rust using rustup...${NC}"
+    
+    # Install dependencies
+    echo -e "${CYAN}Installing dependencies...${NC}"
+    apt install curl build-essential gcc make -y
+    
+    # Download and run rustup installer as the non-root user
+    echo -e "${CYAN}Running rustup installer...${NC}"
+    # We need to run this as the actual user, not as root
+    if [ -n "$SUDO_USER" ]; then
+        su - $SUDO_USER -c 'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y'
+        
+        # Source the cargo environment for the current session for verification
+        if [ -f "/home/$SUDO_USER/.cargo/env" ]; then
+            echo -e "${CYAN}Sourcing Cargo environment...${NC}"
+            # This doesn't affect the root user, but we do it for completeness
+            source "/home/$SUDO_USER/.cargo/env"
+        fi
+        
+        # Add Rust to the user's shell configuration if not already there
+        if ! grep -q "source ~/.cargo/env" "/home/$SUDO_USER/.bashrc"; then
+            echo -e "${CYAN}Adding Rust to user's .bashrc...${NC}"
+            echo 'source ~/.cargo/env' >> "/home/$SUDO_USER/.bashrc"
+        fi
+        
+        echo -e "${GREEN}Rust installed for user $SUDO_USER.${NC}"
+        echo -e "${YELLOW}NOTE: You may need to open a new terminal or run 'source ~/.cargo/env' to use Rust tools.${NC}"
+    else
+        echo -e "${RED}Unable to determine the actual user. Rust should be installed by a regular user, not root.${NC}"
+        echo -e "${YELLOW}Please run 'curl --proto \"=https\" --tlsv1.2 -sSf https://sh.rustup.rs | sh' manually after this script completes.${NC}"
+    fi
 fi
 
 echo -e "${GREEN}=== Setup complete! ===${NC}"
