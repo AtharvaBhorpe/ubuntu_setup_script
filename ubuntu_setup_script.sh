@@ -29,7 +29,8 @@ declare -A steps=(
   [10]="Install Rust using rustup"
   [11]="Install VNC Server from local .deb"
   [12]="Install Zoom Meeting from official sources"
-  [13]="Set Gruvbox wallpaper"
+  [13]="Install Spotify from official sources"
+  [14]="Set Gruvbox wallpaper"
 )
 
 # Function to display the TUI selection menu
@@ -70,7 +71,7 @@ while true; do
   read -r choice
   
   case $choice in
-    [1-9]|10|11|12|13)
+    [1-9]|10|11|12|13|14)
       if [ -n "${steps[$choice]}" ]; then
         if [ "${selected[$choice]}" = true ]; then
           selected[$choice]=false
@@ -323,7 +324,34 @@ if [ "${selected[12]}" = true ]; then
     echo -e "${GREEN}Zoom Meeting installed successfully from official sources.${NC}"
 fi
 
-# Step 13: Set custom wallpaper
+# Step 13: Install Spotify from official sources
+if [ "${selected[13]}" = true ]; then
+    echo -e "${CYAN}Installing Spotify from official sources...${NC}"
+    
+    # Install dependencies
+    echo -e "${CYAN}Installing dependencies...${NC}"
+    apt install curl gnupg2 -y
+    
+    # Add Spotify's signing key
+    echo -e "${CYAN}Adding Spotify's signing key...${NC}"
+    curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg | gpg --dearmor | tee /usr/share/keyrings/spotify-keyring.gpg > /dev/null
+    
+    # Add Spotify repository to sources
+    echo -e "${CYAN}Adding Spotify repository...${NC}"
+    echo "deb [signed-by=/usr/share/keyrings/spotify-keyring.gpg] http://repository.spotify.com stable non-free" > /etc/apt/sources.list.d/spotify.list
+    
+    # Update package list
+    echo -e "${CYAN}Updating package list...${NC}"
+    apt update
+    
+    # Install Spotify
+    echo -e "${CYAN}Installing Spotify client...${NC}"
+    apt install spotify-client -y
+    
+    echo -e "${GREEN}Spotify installed successfully from official sources.${NC}"
+fi
+
+# Step 14: Set custom wallpaper
 if [ "${selected[13]}" = true ]; then
     echo -e "${CYAN}Setting custom wallpaper...${NC}"
     
