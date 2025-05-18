@@ -25,6 +25,7 @@ declare -A steps=(
   [6]="Install Heroic Games Launcher"
   [7]="Install VS Code"
   [8]="Install Pixi package manager"
+  [9]="Install OpenRazer and Polychromatic drivers"
 )
 
 # Function to display the TUI selection menu
@@ -65,7 +66,7 @@ while true; do
   read -r choice
   
   case $choice in
-    [1-8])
+    [1-9])
       if [ -n "${steps[$choice]}" ]; then
         if [ "${selected[$choice]}" = true ]; then
           selected[$choice]=false
@@ -209,6 +210,28 @@ if [ "${selected[8]}" = true ]; then
     else
         echo -e "${YELLOW}Pixi installed but not available in PATH. You may need to restart your shell.${NC}"
     fi
+fi
+
+# Step 9: Install OpenRazer and Polychromatic drivers
+if [ "${selected[9]}" = true ]; then
+    echo -e "${CYAN}Installing OpenRazer and Polychromatic drivers...${NC}"
+    
+    # Add repositories
+    echo -e "${CYAN}Adding OpenRazer and Polychromatic repositories...${NC}"
+    add-apt-repository ppa:openrazer/stable -y
+    add-apt-repository ppa:polychromatic/stable -y
+    apt update
+    
+    # Install packages
+    echo -e "${CYAN}Installing OpenRazer and Polychromatic packages...${NC}"
+    apt install openrazer-meta polychromatic -y
+    
+    # Add user to plugdev group
+    echo -e "${CYAN}Adding user to plugdev group...${NC}"
+    gpasswd -a $SUDO_USER plugdev
+    
+    echo -e "${GREEN}OpenRazer and Polychromatic drivers installed.${NC}"
+    echo -e "${YELLOW}NOTE: You may need to reboot your system for the Razer drivers to work properly.${NC}"
 fi
 
 echo -e "${GREEN}=== Setup complete! ===${NC}"
