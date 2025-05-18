@@ -27,6 +27,9 @@ declare -A steps=(
   [8]="Install Pixi package manager"
   [9]="Install OpenRazer and Polychromatic drivers"
   [10]="Install Rust using rustup"
+  [11]="Install VNC Server from local .deb"
+  [12]="Install Zoom Meeting from local .deb"
+  [13]="Set custom (Gruvbox) wallpaper"
 )
 
 # Function to display the TUI selection menu
@@ -67,7 +70,7 @@ while true; do
   read -r choice
   
   case $choice in
-    [1-9]|10)
+    [1-9]|10|11|12|13)
       if [ -n "${steps[$choice]}" ]; then
         if [ "${selected[$choice]}" = true ]; then
           selected[$choice]=false
@@ -267,6 +270,92 @@ if [ "${selected[10]}" = true ]; then
     else
         echo -e "${RED}Unable to determine the actual user. Rust should be installed by a regular user, not root.${NC}"
         echo -e "${YELLOW}Please run 'curl --proto \"=https\" --tlsv1.2 -sSf https://sh.rustup.rs | sh' manually after this script completes.${NC}"
+    fi
+fi
+
+# Step 11: Install VNC Server from local .deb
+if [ "${selected[11]}" = true ]; then
+    echo -e "${CYAN}Installing VNC Server from local .deb file...${NC}"
+    
+    # Check if the .deb file exists
+    VNC_DEB="VNC-Server-7.13.1-Linux-x64.deb"
+    
+    if [ -f "$VNC_DEB" ]; then
+        # Install dependencies for .deb installation
+        echo -e "${CYAN}Installing dependencies for .deb installation...${NC}"
+        apt install gdebi-core -y
+        
+        # Install the .deb package
+        echo -e "${CYAN}Installing VNC Server using gdebi...${NC}"
+        gdebi --non-interactive "$VNC_DEB"
+        
+        echo -e "${GREEN}VNC Server installed successfully.${NC}"
+    else
+        echo -e "${RED}VNC Server .deb file not found in the current directory.${NC}"
+        echo -e "${YELLOW}Expected file: $VNC_DEB${NC}"
+    fi
+fi
+
+# Step 12: Install Zoom Meeting from local .deb
+if [ "${selected[12]}" = true ]; then
+    echo -e "${CYAN}Installing Zoom Meeting from local .deb file...${NC}"
+    
+    # Check if the .deb file exists
+    ZOOM_DEB="zoom_amd64.deb"
+    
+    if [ -f "$ZOOM_DEB" ]; then
+        # Install dependencies for .deb installation
+        echo -e "${CYAN}Installing dependencies for .deb installation...${NC}"
+        apt install gdebi-core -y
+        
+        # Install the .deb package
+        echo -e "${CYAN}Installing Zoom Meeting using gdebi...${NC}"
+        gdebi --non-interactive "$ZOOM_DEB"
+        
+        echo -e "${GREEN}Zoom Meeting installed successfully.${NC}"
+    else
+        echo -e "${RED}Zoom Meeting .deb file not found in the current directory.${NC}"
+        echo -e "${YELLOW}Expected file: $ZOOM_DEB${NC}"
+    fi
+fi
+
+# Step 13: Set custom wallpaper
+if [ "${selected[13]}" = true ]; then
+    echo -e "${CYAN}Setting custom wallpaper...${NC}"
+    
+    # Define wallpaper file name
+    WALLPAPER_FILE="ALLqk82.png"
+    
+    # Check if the file exists
+    if [ -f "$WALLPAPER_FILE" ]; then
+        # Get the absolute path to the wallpaper
+        WALLPAPER_PATH="$(readlink -f "$WALLPAPER_FILE")"
+        
+        # Make sure gsettings is installed
+        apt install gsettings-desktop-schemas -y
+        
+        # Install dconf-cli which might be needed for gsettings
+        apt install dconf-cli -y
+        
+        if [ -n "$SUDO_USER" ]; then
+            # Set the wallpaper for GNOME desktop
+            echo -e "${CYAN}Setting wallpaper as $WALLPAPER_PATH...${NC}"
+            
+            # Need to set DBUS_SESSION_BUS_ADDRESS for gsettings to work properly
+            su - $SUDO_USER -c "DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u $SUDO_USER)/bus gsettings set org.gnome.desktop.background picture-uri file://$WALLPAPER_PATH"
+            su - $SUDO_USER -c "DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u $SUDO_USER)/bus gsettings set org.gnome.desktop.background picture-uri-dark file://$WALLPAPER_PATH"
+            
+            # Set picture options to 'zoom' (others: 'none', 'wallpaper', 'centered', 'scaled', 'stretched', 'spanned')
+            su - $SUDO_USER -c "DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u $SUDO_USER)/bus gsettings set org.gnome.desktop.background picture-options 'zoom'"
+            
+            echo -e "${GREEN}Wallpaper set successfully.${NC}"
+        else
+            echo -e "${RED}Unable to determine the actual user. Cannot set wallpaper.${NC}"
+            echo -e "${YELLOW}You can manually set the wallpaper by right-clicking on the desktop and selecting 'Change Background'.${NC}"
+        fi
+    else
+        echo -e "${RED}Wallpaper image not found in the current directory.${NC}"
+        echo -e "${YELLOW}Expected file: $WALLPAPER_FILE${NC}"
     fi
 fi
 
