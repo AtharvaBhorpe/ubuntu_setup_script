@@ -28,8 +28,8 @@ declare -A steps=(
   [9]="Install OpenRazer and Polychromatic drivers"
   [10]="Install Rust using rustup"
   [11]="Install VNC Server from local .deb"
-  [12]="Install Zoom Meeting from local .deb"
-  [13]="Set custom (Gruvbox) wallpaper"
+  [12]="Install Zoom Meeting from official sources"
+  [13]="Set Gruvbox wallpaper"
 )
 
 # Function to display the TUI selection menu
@@ -296,27 +296,31 @@ if [ "${selected[11]}" = true ]; then
     fi
 fi
 
-# Step 12: Install Zoom Meeting from local .deb
+# Step 12: Install Zoom Meeting from official sources
 if [ "${selected[12]}" = true ]; then
-    echo -e "${CYAN}Installing Zoom Meeting from local .deb file...${NC}"
+    echo -e "${CYAN}Installing Zoom Meeting from official sources...${NC}"
     
-    # Check if the .deb file exists
-    ZOOM_DEB="zoom_amd64.deb"
+    # Install dependencies
+    echo -e "${CYAN}Installing dependencies...${NC}"
+    apt install wget apt-transport-https gnupg2 -y
     
-    if [ -f "$ZOOM_DEB" ]; then
-        # Install dependencies for .deb installation
-        echo -e "${CYAN}Installing dependencies for .deb installation...${NC}"
-        apt install gdebi-core -y
-        
-        # Install the .deb package
-        echo -e "${CYAN}Installing Zoom Meeting using gdebi...${NC}"
-        gdebi --non-interactive "$ZOOM_DEB"
-        
-        echo -e "${GREEN}Zoom Meeting installed successfully.${NC}"
-    else
-        echo -e "${RED}Zoom Meeting .deb file not found in the current directory.${NC}"
-        echo -e "${YELLOW}Expected file: $ZOOM_DEB${NC}"
-    fi
+    # Add Zoom's signing key
+    echo -e "${CYAN}Adding Zoom's signing key...${NC}"
+    wget -O- https://zoom.us/linux/download/pubkey | gpg --dearmor | tee /usr/share/keyrings/zoom-keyring.gpg > /dev/null
+    
+    # Add Zoom repository to sources
+    echo -e "${CYAN}Adding Zoom repository...${NC}"
+    echo "deb [signed-by=/usr/share/keyrings/zoom-keyring.gpg] https://zoom.us/linux/download/deb stable main" > /etc/apt/sources.list.d/zoom.list
+    
+    # Update package list
+    echo -e "${CYAN}Updating package list...${NC}"
+    apt update
+    
+    # Install Zoom
+    echo -e "${CYAN}Installing Zoom client...${NC}"
+    apt install zoom -y
+    
+    echo -e "${GREEN}Zoom Meeting installed successfully from official sources.${NC}"
 fi
 
 # Step 13: Set custom wallpaper
