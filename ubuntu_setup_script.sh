@@ -24,6 +24,7 @@ declare -A steps=(
   [5]="Install Steam"
   [6]="Install Heroic Games Launcher"
   [7]="Install VS Code"
+  [8]="Install Pixi package manager"
 )
 
 # Function to display the TUI selection menu
@@ -64,7 +65,7 @@ while true; do
   read -r choice
   
   case $choice in
-    [1-7])
+    [1-8])
       if [ -n "${steps[$choice]}" ]; then
         if [ "${selected[$choice]}" = true ]; then
           selected[$choice]=false
@@ -141,7 +142,7 @@ fi
 # Step 3: Install flatpak if not already installed
 if [ "${selected[3]}" = true ]; then
     echo -e "${CYAN}Setting up flatpak...${NC}"
-    nala install flatpak gnome-software-plugin-flatpak -y
+    apt install flatpak gnome-software-plugin-flatpak -y
     flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     echo -e "${GREEN}Flatpak setup complete.${NC}"
 fi
@@ -160,7 +161,7 @@ fi
 # Step 5: Install Steam
 if [ "${selected[5]}" = true ]; then
     echo -e "${CYAN}Installing Steam...${NC}"
-    nala install steam -y
+    apt install steam -y
     echo -e "${GREEN}Steam installed.${NC}"
 fi
 
@@ -183,6 +184,30 @@ if [ "${selected[7]}" = true ]; then
         echo -e "${GREEN}VS Code installed.${NC}"
     else
         echo -e "${RED}Flatpak not found, skipping VS Code installation.${NC}"
+    fi
+fi
+
+# Step 8: Install Pixi package manager
+if [ "${selected[8]}" = true ]; then
+    echo -e "${CYAN}Installing Pixi package manager...${NC}"
+    curl -fsSL https://pixi.sh/install.sh | bash
+    echo -e "${GREEN}Pixi package manager installed.${NC}"
+    
+    # Add Pixi to PATH for the current session
+    echo -e "${CYAN}Adding Pixi to PATH...${NC}"
+    if [ -f "/home/$SUDO_USER/.pixi/bin/pixi" ]; then
+        # Create a symlink in /usr/local/bin to make pixi available system-wide
+        ln -sf "/home/$SUDO_USER/.pixi/bin/pixi" /usr/local/bin/pixi
+        echo -e "${GREEN}Pixi added to PATH.${NC}"
+    else
+        echo -e "${RED}Pixi installation path not found.${NC}"
+    fi
+    
+    # Verify installation
+    if command -v pixi &> /dev/null; then
+        echo -e "${GREEN}Pixi installation verified. Version: $(pixi --version)${NC}"
+    else
+        echo -e "${YELLOW}Pixi installed but not available in PATH. You may need to restart your shell.${NC}"
     fi
 fi
 
